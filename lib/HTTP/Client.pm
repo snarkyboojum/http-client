@@ -11,7 +11,7 @@ class HTTP::Client {
 	has %.headers is rw;
 
 	submethod BUILD(Str :$ua) {
-		$!ua = $ua ?? $ua !! 'Perl6';
+		$!ua = $ua || 'Perl6';
 	}
 
 	method post(Str $url, %data) {
