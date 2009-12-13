@@ -9,21 +9,23 @@ has Str $!headers;
 has Str %!header;
 
 method new(Str $method, Str $link) {
-	unless $method ~~ /GET|POST/ { die 'Only GET and POST are supported'; }
-	unless HTTP::Client::URI.parse($link) { die 'URI is invalid'; }
+	unless $method eq 'GET'|'POST' { die 'Only GET and POST are supported' }
+	unless HTTP::Client::URI.parse($link) { die 'URI is invalid' }
 
 	my %uri = %( %($/).kv>>.Str ); # easier to work with a hash of strings
 	%uri<uri> = $/.Str; # might want access to the matched URI
 
-	unless %uri<host> { die 'No host was specified'; }
-	unless %uri<path> { die 'No path was specified'; }
+	unless %uri<host> { die 'No host was specified' }
+	unless %uri<path> { die 'No path was specified' }
 	# If a port was specified it would be a string
 	unless %uri<port> { %uri<port> = '80'; }
 
-	self = self.bless(*, :$method, :%uri);
+	self .= bless(*, :$method, :%uri);
 
 	# Default headers/content that must be present
-	self.add-header-content: "$.method {%.uri<path>} HTTP/1.1";
+	my $location = %.uri<path>;
+	if %.uri<query> { $location ~= '?' ~ %.uri<query> }
+	self.add-header-content: "$.method $location HTTP/1.1";
 	self.add-header: 'Host', %.uri<host>;
 	self.add-header: 'Connection', 'close';
 
