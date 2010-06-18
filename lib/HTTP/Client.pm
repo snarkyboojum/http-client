@@ -1,3 +1,5 @@
+use MIME::Base64;
+
 grammar URL {
 	rule TOP { <prefix> <host> <uri> }
 	rule prefix { http\:\/\/ }
@@ -57,6 +59,14 @@ class HTTP::Client {
 		return { headers => $headers, host => $/<host>.Str };
 	}	
 
+    method basic-authorization(Str :$username, Str :$password) {
+        if $username ~~ /\:/ {
+            warn "Can't use a username containing ':'";
+        }
+        my $basic-digest = "Basic " ~ base64encode($username ~ ':' ~ $password);
+        %.headers.push: 'Authorization', $basic-digest;
+    }
+
 	method add-cookies(Str $headers) {
 		for $headers.split("\n") -> $header {
 			if $header ~~ /Set\-Cookie\:<ws>(.*?)\=(.*?)\;/ {
@@ -66,22 +76,39 @@ class HTTP::Client {
 	}
 
 	sub format-query(%data) {
-		return (map { "{urlencode(.key)}={urlencode(.value)}&" },
-			%data).join.chop;
+        my $formatted-data;
+        for %data.kv -> $k, $v {
+            $formatted-data ~= "{urlencode($k)}={urlencode($v)}";
+        }
+        return $formatted-data;
 	}
 
 	sub format-cookies(%cookies) {
-		return (map { "{.key}={.value};" }, %cookies).Str;
+        my $formatted-cookies;
+        for %cookies.kv -> $k, $v {
+            $formatted-cookies ~= "$k=$v;";
+        }
+        return $formatted-cookies;
 	}
 
 	sub format-headers(%headers) {
-		return (map { "{.key}: {.value}\r\n" },%headers).join;
+        my $formatted-headers;
+        for %headers.kv -> $k, $v {
+            $formatted-headers ~= "$k: $v\r\n";
+        }
+        return $formatted-headers;
 	}
 
 	sub urlencode(Str $url) {
-		return $url.subst(/(\W & <-[\.]>)/,
-			{sprintf('%%%02X', ord($0))}, :g);
+        return $url;
+		#return $url.subst(/(\W & <-[\.]>)/,
+		#	{sprintf('%%%02X', ord($0))}, :g);
 	}
+
+    sub base64encode($str) {
+        my MIME::Base64 $mime .= new;
+        return $mime.encode_base64($str);
+    }
 }
 
 # vim:ft=perl6

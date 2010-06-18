@@ -30,5 +30,6 @@ ok 'test.txt' ~~ :e, 'tar extracted successfully';
 my $local-txt = open('t/files/test.txt', :r);
 my $remote-txt = open('test.txt', :r);
 is $local-txt.slurp, $remote-txt.slurp, 'local and extracted text files match';
-unlink 'test.tar', 'test.txt';
+unlink 'test.tar';
+unlink 'test.tar';
 }
