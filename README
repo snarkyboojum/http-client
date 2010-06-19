@@ -1,0 +1,6 @@
+http-client is a Perl6 HTTP client framework.
+
+It supports the following:
+  * GET/POST HTTP requests
+  * Basic authentication
+  * Cookies
